@@ -1,0 +1,22 @@
+/* You can add global styles to this file, and also import other style files */
+:root {
+    --rowNumber: 100;
+    --colNumber: 20;
+    --cellSize: 50px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+ul, ol, li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+button {
+    cursor: pointer;
+    all: unset;
+}
