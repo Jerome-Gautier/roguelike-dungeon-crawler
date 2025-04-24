@@ -11,7 +11,8 @@ import { skills } from '../../../../public/data/skills';
       <div class="startscreen-content">
         <div class="header-container">
           <h1>Welcome to {{ title }}</h1>
-          <p>Ahri has been ambushed by Noxus soldiers, help her get her memories back and find a way to escape</p>
+          <p>Ahri has been ambushed by Noxus soldiers and hit by an unknown magic, but a clever Fox is never caught!</p>
+          <p>Help her get her memories back and find a way to escape</p>
         </div>
 
         <div class="separation"></div>

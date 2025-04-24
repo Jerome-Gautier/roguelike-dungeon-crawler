@@ -51,7 +51,7 @@ import { items } from '../../../../public/data/items';
                 wall: cell.state === 'wall',
                 infantryman: cell.state === 'infantryman',
                 infantryman_ischarmed: cell.state === 'infantryman_ischarmed',
-                boss: cell.state === 'boss',
+                sion_0: cell.state === 'sion_0',
                 path: cell.state === 'path' && debugMode,
                 memoryShard: cell.state === 'memory_shard',
                 healthPotion: cell.state === 'health_potion',
@@ -229,13 +229,15 @@ import { items } from '../../../../public/data/items';
         border: 2px solid #ff00bf;
       }
 
-      .map-cell.boss .cell-content {
+      .map-cell.sion_0 .cell-content {
         position: absolute;
+        box-sizing: border-box;
         top: 0;
         left: 0;
         width: calc(var(--cellSize) * 2);
         height: calc(var(--cellSize) * 2);
         background-image: url('/images/enemies/sion.png');
+        border: 4px red solid;
         z-index: 100;
       }
 
@@ -273,10 +275,8 @@ import { items } from '../../../../public/data/items';
 
       .map-cell.healthPotion .cell-content,
       .map-cell.manaPotion .cell-content,
-      .map-cell.essencetheft
-        .cell-content
-        .map-cell.orbofdeception
-        .cell-content,
+      .map-cell.essencetheft .cell-content,
+      .map-cell.orbofdeception .cell-content,
       .map-cell.foxfire .cell-content,
       .map-cell.charm .cell-content,
       .map-cell.spiritRush .cell-content {
@@ -319,6 +319,7 @@ import { items } from '../../../../public/data/items';
 })
 export class BoardComponent {
   @Input() title!: string;
+  
   mapService = inject(MapService);
   playerService = inject(PlayerService);
   enemies = enemies;
@@ -462,9 +463,9 @@ export class BoardComponent {
 
     const cellType = this.mapService.map[newPosY][newPosX].state;
     let obstacle = false;
-    if (['infantryman', 'infantryman_ischarmed', 'sion'].includes(cellType)) {
+    if (cellType.startsWith("infantryman") || cellType.startsWith("sion")) {
       const enemy =
-        cellType === 'sion'
+        cellType.startsWith("sion")
           ? this.findLargeEnemies(newPosX, newPosY)
           : this.mapService.enemies.find(
               (enemy) => enemy.posX === newPosX && enemy.posY === newPosY
@@ -534,6 +535,16 @@ export class BoardComponent {
 
   selectSpell(spell: string) {
     if (spell === 'essencetheft') return; // Prevent selecting passive skill
+    const checkMana = this.playerService.checkSpellManaCost(spell)
+    
+    // Check if the player has enough mana to cast the spell
+    if (checkMana.event === "nomana") {
+      this.consoleLogs.unshift({
+        event: checkMana.event,
+        message: checkMana.message,
+      });
+      return;
+    }
     this.clearSpellRange(); // Clear previous spell range
     this.selectedSpell = {
       name: this.playerService.skills[spell].name,
@@ -625,7 +636,7 @@ export class BoardComponent {
         });
         if (result.enemies && result.enemies.length > 0) {
           result.enemies.forEach((enemy) => {
-            if (enemy.posY && enemy.posX) {
+            if (typeof enemy.posX === "number" && typeof enemy.posY === "number") {
               if (enemy.health <= 0) {
                 // Remove defeated enemy
                 this.removeDefeatedEnemies(enemy);
@@ -646,7 +657,7 @@ export class BoardComponent {
         // Update the map to show the spell effect
         if (result.enemies && result.enemies.length > 0) {
           result.enemies.forEach((enemy) => {
-            if (enemy.posY && enemy.posX) {
+            if (typeof enemy.posX === "number" && typeof enemy.posY === "number") {
               if (enemy.health <= 0) {
                 // Remove defeated enemy
                 this.removeDefeatedEnemies(enemy);
@@ -696,18 +707,11 @@ export class BoardComponent {
         }
       } else {
         this.consoleLogs.unshift({
-          event: 'invalidinput',
+          event: 'spellcast',
           message: 'No enemies in range.',
         });
       }
     } else if (this.selectedSpell.id === 'spiritrush') {
-      if (!this.playerService.initSpiritRush()) {
-        this.consoleLogs.unshift({
-          event: 'nomana',
-          message: 'Not enough mana to cast Spirit Rush.',
-        });
-        return;
-      }
       // Check targeted cell
       const cellType = this.mapService.map[y][x].state;
       if (['empty', 'path'].includes(cellType)) {
@@ -728,7 +732,7 @@ export class BoardComponent {
         // Update the map to show the spell effect
         if (result.enemies) {
           result.enemies.forEach((enemy) => {
-            if (enemy.posY && enemy.posX) {
+            if (typeof enemy.posX === "number" && typeof enemy.posY === "number") {
               if (enemy.health <= 0) {
                 this.removeDefeatedEnemies(enemy);
               }
@@ -927,6 +931,14 @@ export class BoardComponent {
     this.mapService.enemies = this.mapService.enemies.filter(
       (e) => e !== enemy
     );
+    // Clear the cells occupied by large enemies
+    if (enemy.size > 1) {
+      for (let i = 0; i < enemy.size; i++) {
+        for (let j = 0; j < enemy.size; j++) {
+          this.mapService.map[enemy.posY + j][enemy.posX + i].state = 'empty';
+        }
+      }
+    }
     this.consoleLogs.unshift({
       event: 'fightwon',
       message: `You defeated ${enemy.name} and gained ${enemy.xp} XP.`,

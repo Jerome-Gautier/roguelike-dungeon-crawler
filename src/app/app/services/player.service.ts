@@ -51,7 +51,6 @@ export class PlayerService {
       Math.random() * (this.damageMax - this.damageMin + 1) + this.damageMin
     );
     enemy.health -= ahriDmg;
-    console.log(enemy);
     if (enemy.health <= 0 || enemy.isCharmed) {
       this.enemyDefeated(enemy);
       return {
@@ -220,7 +219,7 @@ export class PlayerService {
       });
       return {
         event: 'fight',
-        message: `Casted Fox-Fire, inflicting ${damage} damage to ${
+        message: `Ahri casted Fox-Fire, inflicting ${damage} damage to ${
           enemies.length
         } ${enemies.length > 1 ? enemies.length + ' enemies' : 'an enemy'}.`,
         enemies: enemies,
@@ -253,7 +252,7 @@ export class PlayerService {
         enemy.isCharmed = true;
         return {
           event: 'spellcast',
-          message: `Casted Charm on ${enemy.name}.`,
+          message: `Ahri casted Charm on ${enemy.name}.`,
           enemy: enemy,
         };
       }
@@ -266,8 +265,19 @@ export class PlayerService {
     }
   }
 
-  initSpiritRush() {
-    return this.mana >= this.skills.spiritrush.manaCost;
+  checkSpellManaCost(spell: string) {
+    const result = this.mana >= this.skills[spell].manaCost;
+    if (!result) {
+      return {
+      event: 'nomana',
+      message: `Not enough mana to cast ${this.skills[spell].name}.`,
+      }
+    } else {
+      return {
+        event: 'enoughmana',
+        message: `Enough mana to cast ${this.skills[spell].name}.`,
+      }
+    }
   }
 
   castSpiritRush(enemies: Enemy[]) {
@@ -308,7 +318,7 @@ export class PlayerService {
   // Level up if enough xp is gained
   enemyDefeated(enemy: Enemy) {
     this.xp += enemy.xp;
-    if (this.skills.essencetheft.available)
+    if (this.skills.essencetheft.unlocked)
       this.health += Math.floor(enemy.healthMax * 0.1);
     if (this.xp >= this.xpToLevel) {
       this.xp -= this.xpToLevel;

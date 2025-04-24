@@ -50,7 +50,7 @@ export const enemies: { [key: string]: Enemy } = {
         name: "Sion",
         description: "A monstrous undead warrior, once a proud leader of the Noxian army.",
         image: "/images/enemies/sion.png",
-        health: 100,
+        health: 1000,
         healthMax: 1000,
         damageMin: 30,
         damageMax: 50,

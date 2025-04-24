@@ -101,7 +101,8 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
                 fight: log.event === 'fight',
                 itemobtained: log.event === 'itemobtained',
                 skilllearnt: log.event === 'skilllearnt',
-                spellcast: log.event === 'spellcast'
+                spellcast: log.event === 'spellcast',
+                nomana: log.event === 'nomana',
               }"
             >
               {{ log.message }}
@@ -162,7 +163,7 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
     padding: 10px;
     color: #FFFFFF; /* White */
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
     border-radius: 5px;    
   }
 
@@ -251,7 +252,7 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
     border-radius: 5px;
     height: 200px;
     overflow-y: scroll;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.9);
   }
 
   .logs-container li {
@@ -282,6 +283,10 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
   
   .logs-container li.spellcast {
     color: #fff;
+  }
+  
+  .logs-container li.nomana {
+    color:rgb(100, 22, 22);
   }`,
 })
 export class PlayerSidebarComponent {

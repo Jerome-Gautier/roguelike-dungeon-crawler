@@ -136,8 +136,8 @@ export class MapService {
       }
     }
     // Mark the cells for the Sion
-    sionCells.forEach((cell) => {
-      this.map[cell.y][cell.x].state = `sion`;
+    sionCells.forEach((cell,index) => {
+      this.map[cell.y][cell.x].state = `sion_${index}`;
     });
 
     // Make a wall on the left side of the Sion
