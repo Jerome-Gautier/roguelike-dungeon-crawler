@@ -1,7 +1,6 @@
 import { Component } from "@angular/core";
 import { BoardComponent } from "./components/board/board.component";
 import { StartscreenComponent } from "./components/startscreen/startscreen.component";
-import { NgIf } from "@angular/common";
 import { animate, group, query, state, style, transition, trigger } from "@angular/animations";
 
 @Component({
@@ -25,7 +24,7 @@ import { animate, group, query, state, style, transition, trigger } from "@angul
   template: `
   <div class="container" [@fadeOut]="gameStarted ? 'fadeOut' : ''">
     @switch(gameStarted) {
-      @case(false) { <app-startscreen (startGame)="startGame()" /> }
+      @case(false) { <app-startscreen (startGame)="startGame()" [title]="title" /> }
       @case(true) { <app-board [title]="title" /> }
     }
     </div>  
@@ -36,7 +35,7 @@ import { animate, group, query, state, style, transition, trigger } from "@angul
     }`],
 })
 export class AppComponent {
-  title = "Kinda Barebone and Generic Dungeon Crawler™";
+  title = "Kinda Barebone and Generic Dungeon Crawler™ (with Ahri)";
   gameStarted: boolean = false;
 
   startGame() {
