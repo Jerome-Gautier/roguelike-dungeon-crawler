@@ -39,7 +39,7 @@ import { skills } from '../../../../public/data/skills';
         <div class="separation"></div>
         
         <div class="section-container">
-          <p>Recover Ahri's memory of her lost spells and use them wisely to defeat the Noxian soldiers</p>
+          <p>Recover Ahri's memories of her lost spells and use them wisely to defeat the Noxian soldiers</p>
           <ul class="section-list">
             <li *ngFor='let skill of skillsList'>
               <img [src]='skill.image' alt='{{ skill.name }}' width='50' height='50' />
