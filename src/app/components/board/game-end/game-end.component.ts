@@ -40,8 +40,8 @@ import {
   standalone: true,
   template: `
     <div *ngIf="gameOver || gameWon" class="outer-container">
-      <div class="game-done-overlay" [@fadeIn]></div>
-      <div class="game-done-container" [@slideIn]>
+      <div [@fadeIn] class="game-done-overlay"></div>
+      <div [@slideIn] class="game-done-container">
         <div class="lost" *ngIf="gameOver">
           <h2>The silence is full of ghostly motion</h2>
           <h2>You can feel the memories slide,</h2>
@@ -49,14 +49,15 @@ import {
           <h2>And nobody speaking.</h2>
           <button (click)="onRestart()">Play Again ?</button>
         </div>
-        <div class="won" *ngIf="gameWon">
+        <div class="won" *ngIf="gameWon && !quit">
           <h2>Quick as a fox, Ahri managed to escape</h2>
           <h2>from the clutch of the Noxians</h2>
           <h2>Legends never die, at least not today...</h2>
           <button (click)="onRestart()">Play Again ?</button>
           <button (click)="onQuit()">I'm done</button>
         </div>
-        <div *ngIf="quit" class="quit-message">
+        <div *ngIf="quit" class="quit-container">
+          <div class="bg-charm"></div>
           <h2>Thanks for playing!</h2>
       </div>
     </div>
@@ -136,25 +137,25 @@ import {
           255,
           255,
           0.1
-        ); /* Subtle transparent overlay */
-        background-image: url('/images/background/bg-good-end.jpg'); /* Use the provided background */
+        );
+        background-image: url('/images/background/bg-good-end.jpg');
         background-size: cover;
         background-repeat: no-repeat;
         background-position: center;
         text-align: left;
-        color: #ff79c6; /* Vibrant pink to match the orb's glow */
-        border: 2px solid #ff79c6; /* Pink border for emphasis */
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8); /* Add depth with a shadow */
+        color: #ff79c6;
+        border: 2px solid #ff79c6;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
         padding: 30px;
-        border-radius: 15px; /* Rounded corners for a polished look */
-        animation: glow 1.5s infinite alternate; /* Subtle glowing effect */
+        border-radius: 15px;
+        animation: glow 1.5s infinite alternate;
       }
 
       .game-done-container .won h2 {
         font-size: 28px;
         font-weight: bold;
         margin: 15px 0;
-        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8); /* Add depth to the text */
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
       }
 
       .game-done-container .won button {
@@ -163,17 +164,32 @@ import {
         margin-right: 10px;
         font-size: 20px;
         font-weight: bold;
-        background-color: #ff79c6; /* Match the pink theme */
+        background-color: #ff79c6;
         color: white;
         border: none;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add depth to the button */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
       }
 
       .game-done-container .won button:hover {
-        background-color: #ff4db2; /* Darker pink on hover */
+        background-color: #ff4db2;
+      }
+
+      .game-done-container .quit-container .bg-charm {
+        width: 600px;
+        height: 400px;
+        background-image: url('/images/background/bg-ahri-charm-spirit-blossom.jpg');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        color: #ff79c6;
+        border: 2px solid #ff79c6;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+        padding: 30px;
+        border-radius: 15px;
+        animation: glow 1.5s infinite alternate;
       }
 
       /* Glowing animation */
@@ -198,9 +214,7 @@ export class GameEndComponent {
     this.restart.emit();
   }
 
-  onQuit() {
-    console.log('Quitting the game...');
-    
+  onQuit() {   
     this.quit = true;
   }
 }

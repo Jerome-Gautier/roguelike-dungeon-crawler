@@ -1,7 +1,6 @@
 import { NgFor, NgIf } from '@angular/common';
 import {
   Component,
-  ElementRef,
   EventEmitter,
   inject,
   Input,
@@ -10,23 +9,39 @@ import {
 } from '@angular/core';
 
 import { PlayerService } from '../../../app/services/player.service';
-import { AudioIconComponent } from "../../../../../public/icons/audio-icon.components";
-import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.components";
+import { AudioIconComponent } from '../../icons/audio-icon.components';
+import { NoaudioIconComponent } from '../../icons/noaudio-icon.components';
+import { MusicIconComponent } from '../../icons/music-icon.components';
+import { NomusicIconComponent } from '../../icons/nomusic-icon.components';
+import { SoundService } from '../../../app/services/sound.service';
 
 @Component({
   selector: 'app-player-sidebar',
-  imports: [NgFor, NgIf, AudioIconComponent, NoaudioIconComponent],
+  imports: [
+    NgFor,
+    NgIf,
+    AudioIconComponent,
+    NoaudioIconComponent,
+    MusicIconComponent,
+    NomusicIconComponent,
+  ],
   template: `
-    <audio #backgroundMusic loop>
-      <source src="/audio/02_Tristram.mp3" type="audio/mpeg" />
-      Your browser does not support the audio element.
-    </audio>
-
     <div class="outer-container" [class.visible]="sidebarVisible">
-      <button class="audio-btn" (click)="toggleMusic()">
-        <app-noaudio-icon *ngIf="isMusicPlaying" />
-        <app-audio-icon *ngIf="!isMusicPlaying" />
-      </button>
+      <div class="sound-control-container">
+        <button class="sound-btn" (click)="toggleMusic()">
+          @switch(this.isMusicPlaying) {
+            @case (false) { <app-nomusic-icon /> }
+            @case (true) { <app-music-icon /> }
+          }
+        </button>
+        <button class="sound-btn" (click)="toggleSound()">
+          @switch(this.isSoundEnabled) {
+            @case (false) { <app-noaudio-icon /> }
+            @case (true) { <app-audio-icon /> }
+          }
+        </button>
+      </div>
+
       <button class="hide-button" (click)="sidebarVisible = !sidebarVisible">
         {{ sidebarVisible ? '<' : '>' }}
       </button>
@@ -37,7 +52,9 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
           <p>Experience: {{ this.player.xp }} / {{ this.player.xpToLevel }}</p>
           <p>Health: {{ this.player.health }} / {{ this.player.healthMax }}</p>
           <p>Mana: {{ this.player.mana }} / {{ this.player.manaMax }}</p>
-          <p>Damage: {{ this.player.damageMin }} - {{ this.player.damageMax }}</p>
+          <p>
+            Damage: {{ this.player.damageMin }} - {{ this.player.damageMax }}
+          </p>
         </div>
         <div class="activable-container">
           <h4>Abilities</h4>
@@ -50,7 +67,6 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
                     alt="{{ player.skills[skill].name }}"
                     width="50"
                     height="50"
-
                   />
                 </button>
                 <div class="tooltip">
@@ -72,7 +88,10 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
         <div class="activable-container">
           <h4>Inventory</h4>
           <ul class="items-list">
-            <li *ngFor="let item of itemsList" (click)="this.useItem.emit(item)">
+            <li
+              *ngFor="let item of itemsList"
+              (click)="this.useItem.emit(item)"
+            >
               @if (player.items[item].owned > 0 || player.items[item].name ===
               'Memory Shard') {
               <img
@@ -92,11 +111,11 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
         </div>
       </div>
       <div class="logs-container">
-          <h3>Events</h3>
-          <ul class="logs-list">
-            <li
-              *ngFor="let log of logs"
-              [class]="{
+        <h3>Events</h3>
+        <ul class="logs-list">
+          <li
+            *ngFor="let log of logs"
+            [class]="{
                 fightwon: log.event === 'fightwon',
                 fight: log.event === 'fight',
                 itemobtained: log.event === 'itemobtained',
@@ -104,11 +123,11 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
                 spellcast: log.event === 'spellcast',
                 nomana: log.event === 'nomana',
               }"
-            >
-              {{ log.message }}
-            </li>
-          </ul>
-        </div>
+          >
+            {{ log.message }}
+          </li>
+        </ul>
+      </div>
     </div>
   `,
   styles: `
@@ -134,14 +153,22 @@ import { NoaudioIconComponent } from "../../../../../public/icons/noaudio-icon.c
     transform: translateX(0);
   }
 
-  .audio-btn {
+  .sound-control-container {
     position: absolute;
+    display: flex;
     top: 10px;
     left: 10px;
+    gap: 20px;
+    padding: 10px;
+  }
+
+  .sound-control-container .sound-btn {
     font-size: 18px;
-    padding: 1px 10px;
+    padding: 10px;
     cursor: pointer;
     fill: #fff;
+    background-color: black;
+    border-radius: 50%;
   }
   
   .hide-button {
@@ -295,23 +322,29 @@ export class PlayerSidebarComponent {
   @Output() selectSpell = new EventEmitter();
 
   player = inject(PlayerService);
-  skillsList = Object.keys(this.player.skills);
-  itemsList = Object.keys(this.player.items);
-  sidebarVisible: boolean = true;
   isMusicPlaying: boolean = false;
+  isSoundEnabled: boolean = false;
 
-  @ViewChild('backgroundMusic') backgroundMusic!: ElementRef<HTMLAudioElement>;
+  sidebarVisible: boolean = true;
 
-  toggleMusic(): void {
-    const audio = this.backgroundMusic.nativeElement;
-    audio.volume = 0.1; // Set volume to 10%
-    if (this.isMusicPlaying) {
-      audio.pause();
-    } else {
-      audio.play().catch((error) => {
-        console.error('Error playing audio:', error);
-      });
-    }
-    this.isMusicPlaying = !this.isMusicPlaying;
+  itemsList: string[] = Object.keys(this.player.items);
+  skillsList: string[] = Object.keys(this.player.skills);
+
+
+  constructor(private soundService: SoundService) {
+    this.soundService.isMusicPlaying.subscribe((isPlaying) => {
+      this.isMusicPlaying = isPlaying;
+    });
+    this.soundService.isSoundEnabled.subscribe((isEnabled) => {
+      this.isSoundEnabled = isEnabled;
+    });
+  }
+
+  toggleMusic() {
+    this.soundService.toggleMusic();
+  }
+
+  toggleSound() {
+    this.soundService.toggleSound();
   }
 }
