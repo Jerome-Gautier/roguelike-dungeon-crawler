@@ -143,14 +143,14 @@ export class MapService {
     // Make a wall on the left side of the Sion
     for (let i = 0; i < startX; i++) {
       for (let j = 0; j < size; j++) {
-        this.map[j][i].state = 'wall';
+        this.map[j][i].state = 'barrier';
       }
     }
 
     // Make a wall on the right side of the Sion
     for (let i = endX + 1; i < this.mapParams.cols; i++) {
       for (let j = 0; j < size; j++) {
-        this.map[j][i].state = 'wall';
+        this.map[j][i].state = 'barrier';
       }
     }
 
@@ -187,7 +187,6 @@ export class MapService {
         }
         if (['empty', 'wall'].includes(this.map[y][x].state)) {
           this.map[y][x].state = itemsList[i];
-          this.map[y][x].visible = this.mapParams.easy && true;; // Mark the item as visible
           itemCount--;
         }
       }

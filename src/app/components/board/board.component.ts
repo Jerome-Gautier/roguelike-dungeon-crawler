@@ -49,6 +49,7 @@ import { items } from '../../../../public/data/items';
                 empty: cell.state === 'empty',
                 player: cell.state === 'player',
                 wall: cell.state === 'wall',
+                barrier: cell.state === 'barrier',
                 infantryman: cell.state === 'infantryman',
                 infantryman_ischarmed: cell.state === 'infantryman_ischarmed',
                 sion_0: cell.state === 'sion_0',
@@ -182,7 +183,7 @@ import { items } from '../../../../public/data/items';
         height: 100%;
         background-color: rgba(0, 0, 0, 1);
         transition: background-color 0.3s ease;
-        z-index: 10;
+        z-index: 100;
       }
 
       .map-cell .cell-overlay.visible {
@@ -196,7 +197,7 @@ import { items } from '../../../../public/data/items';
         width: 100%;
         height: 100%;
         background-color: rgba(68, 0, 255, 0.2);
-        z-index: 100;
+        z-index: 1000;
         cursor: pointer;
       }
 
@@ -214,8 +215,13 @@ import { items } from '../../../../public/data/items';
       }
 
       .map-cell.wall .cell-content {
-        background-color: rgb(39, 11, 11);
+        background-image: url('/images/background/tree.png');
       }
+
+      .map-cell.barrier .cell-content {
+        background-color:rgb(29, 17, 10);
+      }
+
 
       .map-cell.infantryman .cell-content {
         background-image: url('/images/enemies/infantryman_mini.png');
@@ -238,7 +244,7 @@ import { items } from '../../../../public/data/items';
         height: calc(var(--cellSize) * 2);
         background-image: url('/images/enemies/sion.png');
         border: 4px red solid;
-        z-index: 100;
+        z-index: 10;
       }
 
       .map-cell.memoryShard .cell-content {
@@ -267,10 +273,6 @@ import { items } from '../../../../public/data/items';
 
       .map-cell.empty .cell-content {
         background-color: transparent;
-      }
-
-      .map-cell.wall .cell-content {
-        background-color: rgb(39, 11, 11);
       }
 
       .map-cell.healthPotion .cell-content,
@@ -456,7 +458,7 @@ export class BoardComponent {
       newPosX >= this.mapService.mapParams.cols ||
       newPosY < 0 ||
       newPosY >= this.mapService.mapParams.rows ||
-      this.mapService.map[newPosY][newPosX].state === 'wall'
+      ["wall", "barrier"].includes(this.mapService.map[newPosY][newPosX].state)
     ) {
       if (!this.debugMode) return; // Prevent moving out of bounds
     }
