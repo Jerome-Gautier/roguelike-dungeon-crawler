@@ -29,6 +29,16 @@ import { SoundService } from './app/services/sound.service';
       Your browser does not support the audio element.
     </audio>
 
+    <audio #soundEffect>
+      <source src="" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+
+    <audio #voiceLine>
+      <source src="" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+
     <ng-container *ngIf="!gameStarted; else board">
       <app-startscreen
         @componentTransition
@@ -58,8 +68,8 @@ export class AppComponent {
   gameStarted: boolean = false;
 
   @ViewChild('backgroundMusic') backgroundMusic!: ElementRef<HTMLAudioElement>;
-
-  
+  @ViewChild('soundEffect') soundEffect!: ElementRef<HTMLAudioElement>;
+  @ViewChild('voiceLine') voiceLine!: ElementRef<HTMLAudioElement>;
 
   constructor(private soundService: SoundService) {}
   
@@ -75,10 +85,37 @@ export class AppComponent {
         this.backgroundMusic.nativeElement.pause();
       }
     });
+
+    this.soundService.currentSoundEffect.subscribe(soundData => {
+      if (soundData && soundData.file) {
+        const audioElement = this.soundEffect.nativeElement;
+        audioElement.src = `/audio/${soundData.file}`;
+        audioElement.volume = soundData.volume || 0.3;
+        
+        audioElement.play().catch((error) => {
+          console.error('Error playing sound effect: ', error);
+        });
+      }
+    });
+
+    //Voie line subscription
+    this.soundService.currentVoiceLine.subscribe(voiceData => {
+      if (voiceData && voiceData.file) {
+        const audioElement = this.voiceLine.nativeElement;
+        audioElement.src = `/audio/${voiceData.file}`;
+        audioElement.volume = voiceData.volume || 0.5;
+
+        audioElement.play().catch((error) => {
+          console.error('Error playing voice line: ', error);
+        })
+      }
+    })
   }
 
   startGame() {
     this.gameStarted = true;
     this.soundService.toggleMusic();
+    this.soundService.toggleSound();
+    this.soundService.playClickStart();
   }
 }

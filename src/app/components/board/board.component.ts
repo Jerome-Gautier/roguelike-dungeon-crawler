@@ -7,6 +7,7 @@ import { PlayerService } from '../..//app/services/player.service';
 import { enemies } from '../../../../public/data/enemies';
 import { skills } from '../../../../public/data/skills';
 import { items } from '../../../../public/data/items';
+import { SoundService } from '../../app/services/sound.service';
 
 @Component({
   selector: 'app-board',
@@ -69,9 +70,54 @@ import { items } from '../../../../public/data/items';
                 *ngIf="cell.inSpellRange"
                 (click)="castSpellOnCell(cell.posX, cell.posY)"
               ></div>
-              <div class="cell-overlay" [class.visible]="cell.visible"></div>
+              <div *ngIf="!cell.visible" class="cell-overlay"></div>
+              <div
+                *ngIf="cell.state === 'infantryman'"
+                class="enemy-overlay"
+                [style.height.%]="cell.healthPercent"
+              ></div>
               <div class="cell-content">
                 <p *ngIf="this.debugMode"></p>
+              </div>
+              <div
+                *ngIf="cell.state === 'player'"
+                class="player-healthbar-halfcircle"
+              >
+                <svg width="50" height="50" viewBox="0 0 50 50">
+                  <path
+                    d="M 25 1
+                      A 24 24 0 0 0 25 49"
+                    fill="none"
+                    stroke="#ff0000"
+                    stroke-width="2"
+                    [attr.stroke-dasharray]="playerHalfCircleLength"
+                    [attr.stroke-dashoffset]="
+                      playerHalfCircleLength *
+                      (1 - playerService.healthPercent / 200)
+                    "
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
+              <div
+                *ngIf="cell.state === 'player'"
+                class="player-manabar-halfcircle"
+              >
+                <svg width="50" height="50" viewBox="0 0 50 50">
+                  <path
+                    d="M 25 1
+         A 24 24 0 0 1 25 49"
+                    fill="none"
+                    stroke="#00aaff"
+                    stroke-width="2"
+                    [attr.stroke-dasharray]="playerHalfCircleLength"
+                    [attr.stroke-dashoffset]="
+                      playerHalfCircleLength *
+                      (1 - playerService.manaPercent / 200)
+                    "
+                    stroke-linecap="round"
+                  />
+                </svg>
               </div>
             </div>
           </div>
@@ -186,10 +232,6 @@ import { items } from '../../../../public/data/items';
         z-index: 100;
       }
 
-      .map-cell .cell-overlay.visible {
-        background-color: rgba(0, 0, 0, 0);
-      }
-
       .map-cell .spell-range {
         position: absolute;
         top: 0;
@@ -211,7 +253,32 @@ import { items } from '../../../../public/data/items';
 
       .map-cell.player .cell-content {
         background-image: url('/images/player/AhriPortrait_mini.png');
+        background-position: center;
+        background-repeat: no-repeat;
         border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        z-index: 20;
+      }
+
+      .player-healthbar-halfcircle {
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 50px;
+        height: 50px;
+        pointer-events: none;
+        z-index: 30;
+      }
+
+      .player-manabar-halfcircle {
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        width: 50px;
+        height: 50px;
+        pointer-events: none;
+        z-index: 30;
       }
 
       .map-cell.wall .cell-content {
@@ -219,14 +286,25 @@ import { items } from '../../../../public/data/items';
       }
 
       .map-cell.barrier .cell-content {
-        background-color:rgb(29, 17, 10);
+        background-color: rgb(29, 17, 10);
       }
 
+      .map-cell .enemy-overlay {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        background-color: rgba(255, 0, 0);
+        z-index: 10;
+        transition: height 0.3s ease;
+      }
 
       .map-cell.infantryman .cell-content {
         background-image: url('/images/enemies/infantryman_mini.png');
-        background-color: red;
-        border: 1px solid red;
+        background-size: 46px;
+        background-repeat: no-repeat;
+        background-position: center;
+        z-index: 20;
       }
 
       .map-cell.infantryman_ischarmed .cell-content {
@@ -321,13 +399,14 @@ import { items } from '../../../../public/data/items';
 })
 export class BoardComponent {
   @Input() title!: string;
-  
+
   mapService = inject(MapService);
   playerService = inject(PlayerService);
+  soundService = inject(SoundService);
   enemies = enemies;
   consoleLogs: { event: string; message: string }[] = [];
+  playerHalfCircleLength = Math.PI * 48;
 
-  
   visibleHeight = 650;
   visionDistance = 2;
   mapReady: boolean = false;
@@ -365,12 +444,11 @@ export class BoardComponent {
         case 'F1':
           this.debugMode = !this.debugMode;
           // Unlock all skills
-          this.playerService.itemsList.forEach(item => {
+          this.playerService.itemsList.forEach((item) => {
             this.playerService.items[item].owned = 20;
-            
           });
           this.playerService.skillsList.forEach((skill) => {
-            this.playerService.skills[skill].unlocked = true; 
+            this.playerService.skills[skill].unlocked = true;
           });
           // Reveal all cells
           for (let row = 0; row < this.mapService.mapParams.rows; row++) {
@@ -394,6 +472,9 @@ export class BoardComponent {
 
   ngOnInit() {
     this.generateNewGame();
+    setTimeout(() => {
+      this.soundService.playStartLine();
+    }, 2000);
   }
 
   generateNewGame() {
@@ -458,20 +539,19 @@ export class BoardComponent {
       newPosX >= this.mapService.mapParams.cols ||
       newPosY < 0 ||
       newPosY >= this.mapService.mapParams.rows ||
-      ["wall", "barrier"].includes(this.mapService.map[newPosY][newPosX].state)
+      ['wall', 'barrier'].includes(this.mapService.map[newPosY][newPosX].state)
     ) {
       if (!this.debugMode) return; // Prevent moving out of bounds
     }
 
     const cellType = this.mapService.map[newPosY][newPosX].state;
     let obstacle = false;
-    if (cellType.startsWith("infantryman") || cellType.startsWith("sion")) {
-      const enemy =
-        cellType.startsWith("sion")
-          ? this.findLargeEnemies(newPosX, newPosY)
-          : this.mapService.enemies.find(
-              (enemy) => enemy.posX === newPosX && enemy.posY === newPosY
-            );
+    if (cellType.startsWith('infantryman') || cellType.startsWith('sion')) {
+      const enemy = cellType.startsWith('sion')
+        ? this.findLargeEnemies(newPosX, newPosY)
+        : this.mapService.enemies.find(
+            (enemy) => enemy.posX === newPosX && enemy.posY === newPosY
+          );
       if (enemy) {
         const fightResult = this.playerService.fightEnemy(enemy);
         if (fightResult.status === 'defeated') {
@@ -481,12 +561,19 @@ export class BoardComponent {
             message: fightResult.message,
           });
           this.gameOver = true;
+          setTimeout(() => {
+            this.soundService.playDeathLine();
+          }, 1000);
+
           return;
         } else if (fightResult.status === 'victory') {
           this.mapService.map[newPosY][newPosX].state = 'empty';
           this.removeDefeatedEnemies(enemy);
         } else if (fightResult.status === 'draw') {
           obstacle = true;
+          this.mapService.map[newPosY][newPosX].healthPercent = Math.floor(
+            (enemy.health * 100) / enemy.healthMax
+          );
           this.consoleLogs.unshift({
             event: 'fight',
             message: fightResult.message,
@@ -537,10 +624,10 @@ export class BoardComponent {
 
   selectSpell(spell: string) {
     if (spell === 'essencetheft') return; // Prevent selecting passive skill
-    const checkMana = this.playerService.checkSpellManaCost(spell)
-    
+    const checkMana = this.playerService.checkSpellManaCost(spell);
+
     // Check if the player has enough mana to cast the spell
-    if (checkMana.event === "nomana") {
+    if (checkMana.event === 'nomana') {
       this.consoleLogs.unshift({
         event: checkMana.event,
         message: checkMana.message,
@@ -629,6 +716,7 @@ export class BoardComponent {
         message: result.message,
       });
       if (result.event !== 'nomana') {
+        this.soundService.playQspellvoiceLine();
         // Destroy walls in the path of the spell and gives vision
         targetedCells.forEach(({ x, y }) => {
           this.mapService.map[y][x].visible = true;
@@ -638,7 +726,10 @@ export class BoardComponent {
         });
         if (result.enemies && result.enemies.length > 0) {
           result.enemies.forEach((enemy) => {
-            if (typeof enemy.posX === "number" && typeof enemy.posY === "number") {
+            if (
+              typeof enemy.posX === 'number' &&
+              typeof enemy.posY === 'number'
+            ) {
               if (enemy.health <= 0) {
                 // Remove defeated enemy
                 this.removeDefeatedEnemies(enemy);
@@ -659,7 +750,10 @@ export class BoardComponent {
         // Update the map to show the spell effect
         if (result.enemies && result.enemies.length > 0) {
           result.enemies.forEach((enemy) => {
-            if (typeof enemy.posX === "number" && typeof enemy.posY === "number") {
+            if (
+              typeof enemy.posX === 'number' &&
+              typeof enemy.posY === 'number'
+            ) {
               if (enemy.health <= 0) {
                 // Remove defeated enemy
                 this.removeDefeatedEnemies(enemy);
@@ -683,8 +777,9 @@ export class BoardComponent {
       );
       // Look for enemies in the selected cells
       const enemies = this.getEnemiesInRange(targetedCells);
-      // Find the closest enemy in the selected cells
       if (enemies.length > 0) {
+        this.soundService.playEspellvoiceLine();
+        // Find the closest enemy to the player
         const closestEnemy = enemies.reduce((closest: any, enemy) => {
           if (enemy.posY && enemy.posX && closest.posY && closest.posX) {
             const distanceToCurrent =
@@ -714,6 +809,7 @@ export class BoardComponent {
         });
       }
     } else if (this.selectedSpell.id === 'spiritrush') {
+      this.soundService.playRspellvoiceLine();
       // Check targeted cell
       const cellType = this.mapService.map[y][x].state;
       if (['empty', 'path'].includes(cellType)) {
@@ -734,7 +830,10 @@ export class BoardComponent {
         // Update the map to show the spell effect
         if (result.enemies) {
           result.enemies.forEach((enemy) => {
-            if (typeof enemy.posX === "number" && typeof enemy.posY === "number") {
+            if (
+              typeof enemy.posX === 'number' &&
+              typeof enemy.posY === 'number'
+            ) {
               if (enemy.health <= 0) {
                 this.removeDefeatedEnemies(enemy);
               }
@@ -961,9 +1060,16 @@ export class BoardComponent {
       event: 'itemobtained',
       message: result.message,
     });
+    if (
+      item === 'memory_shard' &&
+      this.playerService.items[item].owned === 20
+    ) {
+      this.soundService.playAllShardsCollected();
+    }
   }
 
   pickUpSkill(skill: string) {
+    if (skill === 'essencetheft') this.soundService.playPassiveCollected();
     const skillResult = this.playerService.learnSkill(skill);
     this.consoleLogs.unshift({
       event: 'skilllearnt',

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { NgIf } from '@angular/common';
 import {
   animate,
@@ -7,6 +7,7 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
+import { SoundService } from '../../../app/services/sound.service';
 
 @Component({
   selector: 'app-game-end',
@@ -208,10 +209,16 @@ export class GameEndComponent {
   @Input() gameOver: boolean = false;
   @Input() gameWon: boolean = false;
   @Output() restart = new EventEmitter<void>();
+
+  soundService = inject(SoundService);
+  
   quit = false;
 
   onRestart() {
     this.restart.emit();
+    setTimeout(() => {
+      this.soundService.playRespawnLine();
+    }, 1000); // Delay to allow the restart animation to finish
   }
 
   onQuit() {   

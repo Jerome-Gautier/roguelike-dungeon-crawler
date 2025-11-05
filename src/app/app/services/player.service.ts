@@ -25,6 +25,16 @@ export class PlayerService {
   skillsList = Object.keys(this.skills);
   items = JSON.parse(JSON.stringify(items));
   itemsList = Object.keys(this.items);
+  fullPower: boolean = false;
+
+  get healthPercent(): number {
+    return (this.health / this.healthMax) * 100;
+  }
+
+  get manaPercent(): number {
+    return (this.mana / this.manaMax) * 100;
+  }
+
 
   resetPlayerStats() {
     this.name = ahriStats.name;
@@ -44,6 +54,7 @@ export class PlayerService {
     this.skillsList = Object.keys(this.skills);
     this.items = JSON.parse(JSON.stringify(items));
     this.itemsList = Object.keys(this.items);
+    this.fullPower = false;
   }
 
   fightEnemy(enemy: Enemy) {
@@ -84,6 +95,9 @@ export class PlayerService {
     if (this.items[item]) {
       this.items[item].owned++;
       if (item === 'memory_shard') {
+        if (this.items[item].owned >= 20) {
+          this.fullPower = true;
+        }
         const healthGained = this.items[item].effects['health'];
         const manaGained = this.items[item].effects['mana'];
         this.health += healthGained;
@@ -308,7 +322,7 @@ export class PlayerService {
   }
 
   calculateSpellDamage(spellDamage: number) {
-    if (this.items["memory_shard"].owned >= 20) {
+    if (this.fullPower) {
       return Math.floor(spellDamage * 2);
     } else {
       return spellDamage;

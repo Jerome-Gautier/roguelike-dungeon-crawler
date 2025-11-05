@@ -8,7 +8,7 @@ import { items } from '../../../../public/data/items';
   providedIn: 'root',
 })
 export class MapService {
-  map: { posX: number; posY: number; state: string; visible: boolean, inSpellRange: boolean }[][] = [];
+  map: { posX: number; posY: number; state: string; visible: boolean, inSpellRange: boolean, healthPercent: number }[][] = [];
   mapParams = {
     cellSize: 50,
     cols: 20,
@@ -37,6 +37,7 @@ export class MapService {
         state: Math.random() > 0.8 ? 'empty' : 'wall',
         visible: false,
         inSpellRange: false,
+        healthPercent: 100,
       }))
     );
   }

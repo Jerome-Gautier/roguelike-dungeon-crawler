@@ -5,7 +5,6 @@ import {
   inject,
   Input,
   Output,
-  ViewChild,
 } from '@angular/core';
 
 import { PlayerService } from '../../../app/services/player.service';
@@ -286,6 +285,7 @@ import { SoundService } from '../../../app/services/sound.service';
     font-size: 18px;
     margin: 12px 0;
     letter-spacing: 0.2px;
+    color: #fff;
   }
 
   .logs-container li:first-child {
@@ -332,11 +332,11 @@ export class PlayerSidebarComponent {
 
 
   constructor(private soundService: SoundService) {
-    this.soundService.isMusicPlaying.subscribe((isPlaying) => {
-      this.isMusicPlaying = isPlaying;
+    this.soundService.isMusicPlaying.subscribe((playing) => {
+      this.isMusicPlaying = playing;
     });
-    this.soundService.isSoundEnabled.subscribe((isEnabled) => {
-      this.isSoundEnabled = isEnabled;
+    this.soundService.isSoundEnabled.subscribe((enabled) => {
+      this.isSoundEnabled = enabled;
     });
   }
 
